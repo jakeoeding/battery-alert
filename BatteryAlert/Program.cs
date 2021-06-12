@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Windows.Forms;
 using System.Timers;
+using Serilog;
 using Twilio;
 using Twilio.Types;
 using Twilio.Rest.Api.V2010.Account;
@@ -23,11 +24,13 @@ namespace BatteryAlert
 
         static void Main()
         {
+            Log.Logger = new LoggerConfiguration().WriteTo.File("battery_alert_log").CreateLogger();
+
             string[] requiredStrings = { ToNumber, FromNumber, AccountSID, AuthToken };
 
             if (requiredStrings.Any(str => str == null))
             {
-                Console.WriteLine("Error: required variable is unavailable.");
+                Log.Error("Required environment variable is unavailable.");
                 Environment.Exit(1);
             }
             else
@@ -44,7 +47,7 @@ namespace BatteryAlert
                     Application.DoEvents();
                 }
 
-                Console.WriteLine($"Program exited after {CheckCount} checks.");
+                Log.Information($"Program exited after {CheckCount} checks.");
             }
         }
 
@@ -86,9 +89,9 @@ namespace BatteryAlert
                     to: new PhoneNumber(ToNumber)
                 );
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Console.WriteLine(e);
+                Log.Error(ex.Message);
             }
         }
     }
