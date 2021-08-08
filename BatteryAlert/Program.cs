@@ -13,8 +13,8 @@ namespace BatteryAlert
     {
         const float LOW_THRESHOLD = 0.15f;
         const float HIGH_THRESHOLD = 0.85f;
-        const ushort MINUTES_DELAY = 10;
-        const ushort MAX_CHECK_COUNT = 24;
+        const ushort MINUTES_DELAY = 8;
+        const ushort MAX_CHECK_COUNT = 32;
 
         static ushort CheckCount = 0;
         static readonly string ToNumber = Environment.GetEnvironmentVariable("TWILIO_TO_NUMBER");
@@ -59,21 +59,23 @@ namespace BatteryAlert
 
         static void CheckBatteryStatus()
         {
-            float batteryState = SystemInformation.PowerStatus.BatteryLifePercent;
+            var status = SystemInformation.PowerStatus;
+            float chargePercent = status.BatteryLifePercent;
+            bool charging = status.PowerLineStatus == PowerLineStatus.Online;
             string alertText = null;
 
-            if (batteryState <= LOW_THRESHOLD)
+            if (!charging && chargePercent <= LOW_THRESHOLD)
             {
                 alertText = "Plug in your charger.";
             }
-            else if (batteryState >= HIGH_THRESHOLD)
+            else if (charging && chargePercent >= HIGH_THRESHOLD)
             {
                 alertText = "Unplug your charger.";
             }
 
             if (alertText != null)
             {
-                SendMessage($"Your battery is {batteryState * 100}% full. {alertText}");
+                SendMessage($"Your battery is {Math.Round(chargePercent * 100)}% full. {alertText}");
             }
         }
 
